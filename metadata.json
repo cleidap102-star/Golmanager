@@ -1,0 +1,6 @@
+{
+  "name": "NextFoot — Football Manager Brasileiro",
+  "description": "Simulador brasileiro de gerenciamento de futebol com base global de olheiros, divisões masculina e feminina, finanças, estádio, imprensa e engine de partidas 2D.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

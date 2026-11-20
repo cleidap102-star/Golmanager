@@ -1,0 +1,122 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.uid == userId;
+    }
+
+    function isValidCareerSave(data, userId) {
+      return data.keys().hasAll([
+        'ownerId',
+        'saveName',
+        'managerName',
+        'clubName',
+        'leagueName',
+        'division',
+        'season',
+        'currentDay',
+        'stateMap',
+        'createdAt',
+        'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'ownerId',
+        'saveName',
+        'managerName',
+        'clubName',
+        'leagueName',
+        'division',
+        'season',
+        'currentDay',
+        'stateMap',
+        'createdAt',
+        'updatedAt'
+      ])
+      && data.ownerId is string
+      && data.ownerId.size() <= 128
+      && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+      && data.ownerId == userId
+      && data.ownerId == request.auth.uid
+      && data.saveName is string
+      && data.saveName.size() >= 1
+      && data.saveName.size() <= 80
+      && data.managerName is string
+      && data.managerName.size() >= 1
+      && data.managerName.size() <= 40
+      && data.clubName is string
+      && data.clubName.size() >= 1
+      && data.clubName.size() <= 60
+      && data.leagueName is string
+      && data.leagueName.size() >= 1
+      && data.leagueName.size() <= 60
+      && data.division is string
+      && data.division.size() <= 16
+      && data.division in ['MASCULINO', 'FEMININO']
+      && data.season is int
+      && data.season >= 2020
+      && data.season <= 2200
+      && data.currentDay is int
+      && data.currentDay >= 1
+      && data.currentDay <= 1000
+      && data.stateMap is map
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId}/saves/{saveId} {
+      allow get: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(saveId);
+      allow list: if isVerifiedOwner(userId) && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidId(saveId)
+        && isValidCareerSave(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidId(saveId)
+        && isValidCareerSave(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'saveName',
+          'managerName',
+          'clubName',
+          'leagueName',
+          'division',
+          'season',
+          'currentDay',
+          'stateMap',
+          'updatedAt'
+        ]);
+
+      allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(saveId);
+    }
+  }
+}

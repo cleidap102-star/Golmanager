@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "CareerSave": {
+      "title": "CareerSave",
+      "description": "Cloud-persisted NextFoot manager career save belonging to a single authenticated user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the save owner."
+        },
+        "saveName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Human-readable label for the career slot."
+        },
+        "managerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Name of the manager."
+        },
+        "clubName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Current managed club name."
+        },
+        "leagueName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Active league name."
+        },
+        "division": {
+          "type": "string",
+          "enum": ["MASCULINO", "FEMININO"],
+          "description": "Male or female division."
+        },
+        "season": {
+          "type": "integer",
+          "description": "Current career season year."
+        },
+        "currentDay": {
+          "type": "integer",
+          "description": "Current calendar day in the season."
+        },
+        "stateMap": {
+          "type": "object",
+          "description": "Native Firestore Map containing the structured career state."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the save slot was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the save slot was last updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "saveName",
+        "managerName",
+        "clubName",
+        "leagueName",
+        "division",
+        "season",
+        "currentDay",
+        "stateMap",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/saves/{saveId}": {
+      "schema": {
+        "$ref": "#/entities/CareerSave"
+      },
+      "description": "Private cloud save slots scoped strictly to the owning user."
+    }
+  }
+}
